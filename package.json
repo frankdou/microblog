@@ -6,9 +6,10 @@
     "start": "node app"
   },
   "dependencies": {
-    "express": "3.0.0rc5",
+    "express": "*",
     "ejs": "*",
 	  "connect-mongo":"*",
-    "mongoose":"*"
+    "mongoose":"*",
+    "connect-flash":"*"
   }
 }

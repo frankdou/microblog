@@ -6,14 +6,15 @@ var User=require('../models/user.js');
 var Post=require('../models/post.js');
 var checkLogin = function (req, res, next) {
         if (!req.session.user) {
-            req.session.error = '未登录';
+            req.flash('error', '未登录');
             return res.redirect('/login');
+
         }
         next();
     };
 var checkNotLogin = function (req, res, next) {
         if (req.session.user) {
-            req.session.error = '已登录';
+            req.flash('error', '已登录');
             return res.redirect('/');
         }
         next();
@@ -28,7 +29,9 @@ module.exports = function(app) {
             res.render('index', {
                 title: '首页',
                 user: req.session.user,
-                posts: posts
+                posts: posts,
+                success: req.flash('success').toString(),
+                error: req.flash('error').toString()
             });
         });
     });
@@ -37,18 +40,20 @@ module.exports = function(app) {
     app.get('/u/:user', function(req, res) {
         User.userFind(req.params.user, function(err, user) {
             if (!user) {
-                req.session.error = '用户不存在';
+                req.flash('error', '用户不存在');
                 return res.redirect('/');
             }
             Post.userPostFind(user.name, function(err, posts) {
                 if (err) {
-                    req.session.error = err;
+                    req.flash('error', err);
                     return res.redirect('/');
                 }
                 res.render('user', {
                     title: user.name,
                     posts: posts,
-                    user: req.session.user
+                    user: req.session.user,
+                    success: req.flash('success').toString(),
+                    error: req.flash('error').toString()
                 });
             });
         });
@@ -62,10 +67,10 @@ module.exports = function(app) {
         };
         Post.postSave(post, function(err) {
             if (err) {
-                req.session.error = err;
+                req.flash('error', err);
                 return res.redirect('/');
             }
-            req.session.success = '发表成功';
+            req.flash('success', '发表成功');
             res.redirect('/u/' + post.user.name);
         });
     });
@@ -74,23 +79,25 @@ module.exports = function(app) {
     app.get('/reg', function(req, res) {
         res.render('reg', {
             title: '用户注册',
-            user: req.session.user
+            user: req.session.user,
+            success: req.flash('success').toString(),
+            error: req.flash('error').toString()
         });
     });
     //用户注册, 检查登录状态,如果已经登录，直接跳转到首页
     app.post('/reg', checkNotLogin);
     app.post('/reg', function(req, res) {
         if (!req.body['username']) {
-            req.session.error = '用户名不能空';
+            req.flash('error', '用户名不能空');
             return res.redirect('/reg');
         }
         if (!req.body['password']) {
-            req.session.error = '密码不能空';
+            req.flash('error', '密码不能空');
             return res.redirect('/reg');
         }
 
         if (req.body['password-repeat'] != req.body['password']) {
-            req.session.error = '输入的密码不一致';
+            req.flash('error', '输入的密码不一致');
             return res.redirect('/reg');
         }
 
@@ -109,17 +116,17 @@ module.exports = function(app) {
                 err = '用户名已经被注册！';
             }
             if (err) {
-                req.session.error = err;
+                req.flash('error', err);
                 return res.redirect('/reg');
             }
             User.userSave(newUser, function(err) {
                 if (err) {
-                    req.session.error = err;
+                    req.flash('error', err);
                     return res.redirect('/reg');
                 }
                 req.session.user = newUser;
 
-                req.session.success = '注册成功';
+                req.flash('success', '注册成功');
                 res.redirect('/');
             });
         });
@@ -130,7 +137,9 @@ module.exports = function(app) {
     app.get('/login', function(req, res) {
         res.render('login', {
             title: '用户登录',
-            user: req.session.user
+            user: req.session.user,
+            success: req.flash('success').toString(),
+            error: req.flash('error').toString()
         });
     });
     app.post('/login', checkNotLogin);
@@ -142,23 +151,22 @@ module.exports = function(app) {
 
         User.userFind(req.body.username, function(err, user) {
             if (!user) {
-                req.session.error = '用户不存在';
+                req.flash('error', '用户不存在');
                 return res.redirect('/login');
             }
             if (user.password !== password) {
-                req.session.error = '用户密码错误';
+                req.flash('error', '用户密码错误');
                 return res.redirect('/login');
             }
             req.session.user = user;
-            
-            req.session.success = '登录成功'
+            req.flash('success', '登录成功');
             res.redirect('/');
         });
     });
     app.get('/logout', checkLogin);
     app.get('/logout', function(req, res) {
         req.session.user = null;
-        req.session.success = '登出成功'
+        req.flash('success', '登出成功');
         res.redirect('/');
     });
 }
