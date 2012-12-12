@@ -7,12 +7,6 @@ var schema = new mongoose.Schema({
 });
 var Post = db.model('Post', schema);
 
-var Posts = function (username,post,time){
-    // 用于存储post信息
-    this.username=username;
-    this.post=post;
-    this.time=time;
-}
 // 发表留言
 exports.postSave = function (posts,callback){
     var newPost = new Post({
